@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { getQueryFilters, parseRequest } from '@/lib/request';
 import { json, unauthorized } from '@/lib/response';
 import { filterParams, timezoneParam, unitParam } from '@/lib/schema';
-import { canViewWebsite } from '@/permissions';
+import { canViewWebsiteSection } from '@/permissions';
 import { getEventStats } from '@/queries/sql';
 
 export async function GET(
@@ -14,6 +14,7 @@ export async function GET(
     endAt: z.coerce.number().int(),
     unit: unitParam.optional(),
     timezone: timezoneParam,
+    limit: z.coerce.number().optional(),
     ...filterParams,
   });
 
@@ -25,13 +26,14 @@ export async function GET(
 
   const { websiteId } = await params;
 
-  if (!(await canViewWebsite(auth, websiteId))) {
+  if (!(await canViewWebsiteSection(auth, websiteId, 'events'))) {
     return unauthorized();
   }
 
+  const { limit } = query;
   const filters = await getQueryFilters(query, websiteId);
 
-  const data = await getEventStats(websiteId, filters);
+  const data = await getEventStats(websiteId, { limit }, filters);
 
   return json(data);
 }

@@ -1,4 +1,5 @@
-import { Box, Column, Label, Row, Text } from '@umami/react-zen';
+import { Column, Label, Row, Text } from '@umami/react-zen';
+import { Badge } from '@/components/common/Badge';
 import { Empty } from '@/components/common/Empty';
 import { LoadingPanel } from '@/components/common/LoadingPanel';
 import { useSessionDataQuery } from '@/components/hooks';
@@ -17,11 +18,9 @@ export function SessionData({ websiteId, sessionId }: { websiteId: string; sessi
               <Label>{dataKey}</Label>
               <Row alignItems="center" gap>
                 <Text>{stringValue}</Text>
-                <Box paddingY="1" paddingX="2" border borderRadius borderColor="5">
-                  <Text color="muted" size="1">
-                    {DATA_TYPES[dataType]}
-                  </Text>
-                </Box>
+                <Badge variant="gray" dot={false}>
+                  {DATA_TYPES[dataType]}
+                </Badge>
               </Row>
             </Column>
           );

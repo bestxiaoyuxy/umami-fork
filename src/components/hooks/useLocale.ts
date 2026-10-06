@@ -4,7 +4,7 @@ import { httpGet } from '@/lib/fetch';
 import { getDateLocale, getTextDirection } from '@/lib/lang';
 import { setItem } from '@/lib/storage';
 import { setLocale, useApp } from '@/store/app';
-import enUS from '../../../public/intl/country/en-US.json';
+import enUS from '../../../public/intl/messages/en-US.json';
 import { useForceUpdate } from './useForceUpdate';
 
 const messages = {
@@ -32,8 +32,6 @@ export function useLocale() {
 
     setItem(LOCALE_CONFIG, value);
 
-    document.getElementById('__next')?.setAttribute('dir', getTextDirection(value));
-
     if (locale !== value) {
       setLocale(value);
     } else {
@@ -45,6 +43,11 @@ export function useLocale() {
     if (!messages[locale]) {
       saveLocale(locale);
     }
+  }, [locale]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale.split('-')[0];
+    document.documentElement.setAttribute('dir', getTextDirection(locale));
   }, [locale]);
 
   useEffect(() => {

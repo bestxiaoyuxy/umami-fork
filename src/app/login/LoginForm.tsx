@@ -13,19 +13,25 @@ import { useRouter } from 'next/navigation';
 import { useMessages, useUpdateQuery } from '@/components/hooks';
 import { Logo } from '@/components/svg';
 import { setClientAuthToken } from '@/lib/client';
+import { consumeReturnUrl } from '@/lib/return-url';
 import { setUser } from '@/store/app';
 
 export function LoginForm() {
-  const { formatMessage, labels, getErrorMessage } = useMessages();
+  const { t, labels, getErrorMessage } = useMessages();
   const router = useRouter();
   const { mutateAsync, error } = useUpdateQuery('/auth/login');
 
   const handleSubmit = async (data: any) => {
     await mutateAsync(data, {
-      onSuccess: async ({ token, user }) => {
-        setClientAuthToken(token);
-        setUser(user);
-        router.push('/');
+      onSuccess: async (response: any) => {
+        if (response.requiresTwoFactor) {
+          sessionStorage.setItem('umami.partial-token', response.partialToken);
+          router.push('/login/two-factor');
+          return;
+        }
+        setClientAuthToken(response.token);
+        setUser(response.user);
+        router.push(consumeReturnUrl() ?? '/');
       },
     });
   };
@@ -36,21 +42,26 @@ export function LoginForm() {
         <Logo />
       </Icon>
       <Heading>umami</Heading>
-      <Form onSubmit={handleSubmit} error={getErrorMessage(error)}>
+      <Form
+        onSubmit={handleSubmit}
+        error={getErrorMessage(error)}
+        defaultValues={{ username: '', password: '' }}
+        style={{ minWidth: 300 }}
+      >
         <FormField
-          label={formatMessage(labels.username)}
+          label={t(labels.username)}
           data-test="input-username"
           name="username"
-          rules={{ required: formatMessage(labels.required) }}
+          rules={{ required: t(labels.required) }}
         >
           <TextField autoComplete="username" />
         </FormField>
 
         <FormField
-          label={formatMessage(labels.password)}
+          label={t(labels.password)}
           data-test="input-password"
           name="password"
-          rules={{ required: formatMessage(labels.required) }}
+          rules={{ required: t(labels.required) }}
         >
           <PasswordField autoComplete="current-password" />
         </FormField>
@@ -61,7 +72,7 @@ export function LoginForm() {
             style={{ flex: 1 }}
             isDisabled={false}
           >
-            {formatMessage(labels.login)}
+            {t(labels.login)}
           </FormSubmitButton>
         </FormButtons>
       </Form>
